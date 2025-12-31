@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Year Wishes</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            overflow-x: hidden;
+        }
+        .container {
+            display: flex;
+            width: 300vw; /* 3 pages wide */
+            transition: transform 0.5s ease-in-out; /* Left-to-right sliding animation */
+        }
+        .page {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+            color: white;
+            text-align: center;
+        }
+        .page:nth-child(1) { background: linear-gradient(135deg, #ff6b6b, #4ecdc4); }
+        .page:nth-child(2) { background: linear-gradient(135deg, #45b7d1, #96ceb4); }
+        .page:nth-child(3) { background: linear-gradient(135deg, #feca57, #ff9ff3); }
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            z-index: 10;
+        }
+        nav button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            background: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        nav button:hover { background: #ddd; }
+        .fireworks {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .firework {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: yellow;
+            border-radius: 50%;
+            animation: explode 2s infinite;
+        }
+        @keyframes explode {
+            0% { transform: scale(0); opacity: 1; }
+            50% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        #wishes-list { max-height: 300px; overflow-y: auto; margin-top: 20px; }
+        #countdown { font-size: 2em; }
+        .welcome-message {
+            font-size: 1.2em;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            max-width: 600px;
+        }
+        .rocket {
+            position: absolute;
+            font-size: 2em;
+            animation: fly 2s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes fly {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-200px) scale(0.5); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <button onclick="slideTo(0)">Home</button>
+        <button onclick="slideTo(1)">Wishes</button>
+        <button onclick="slideTo(2)">Countdown</button>
+    </nav>
+    
+    <div class="container" id="container">
+        <!-- Page 1: Home -->
+        <div class="page">
+            <h1>Happy New Year!</h1>
+            <p id="welcome-text">Welcome to [Current Year]. May your year be filled with joy and success.</p>
+            <div class="fireworks" id="fireworks"></div>
+        </div>
+        
+        <!-- Page 2: Wishes -->
+        <div class="page">
+            <h1>Share Your Wishes</h1>
+            <p class="welcome-message">Welcome, New Year ✨<br>
+            A fresh start, a softer heart 🤍, and dreams gently unfolding 🌱<br>
+            May this year bring quiet strength, gentle love, and moments that feel meant for you ✨<br>
+            Release what was heavy, trust what’s ahead 🌙, and step forward with hope.<br>
+            Here’s to healing, becoming, and finding magic in the little things ✨<br>
+            Some people feel like blessings — and you are one 🤍<br>
+            May every door you knock open 🚪, every hope you hold bloom 🌸<br>
+            May God turn tears into smiles 😊, pain into strength 💫, and worries into peace 🌈</p>
+            <input type="text" id="wish-input" placeholder="Enter your New Year wish" style="padding: 10px; width: 300px;">
+            <button onclick="addWish()" style="padding: 10px; margin-left: 10px;">Add Wish</button>
+            <div id="wishes-list"></div>
+        </div>
+        
+        <!-- Page 3: Countdown -->
+        <div class="page">
+            <h1>New Year Countdown</h1>
+            <p class="welcome-message">There’s a girl I’ve known for about 78 days now — of course, it’s you ✨🤍 — and from the very beginning, our conversations felt easy and genuine 🌙. I know you’re not really a chat-or-call person, and I truly respect that 🤍 — especially because you were honest about it, without excuses. That meant a lot 🌱.<br>
+            <br>
+            I don’t know what your opinion of me is, but as time passed, I noticed little things about you — how you’re chill 😌, passionate 🔥, a little silly 😄, responsible when it matters 💫, and honestly… a bit of a bhondu 😋 in the nicest way.<br>
+            <br>
+            I’d love to get to know you better in the future, if that’s meant to happen ✨. No pressure — that choice is yours, always 🌙. I just wish you the very best for your boards 📚 and hope you do amazingly well 🌸.<br>
+            <br>
+            Maybe things felt a little different or uncommon 🌌, but I believe that if you treat everyone the same, then what’s the meaning of being special anyway 🤍. So this… is just that ✨.</p>
+            <div id="countdown">Calculating...</div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0;
+        const totalPages = 3;
+
+        // Left-to-right sliding function
+        function slideTo(pageIndex) {
+            currentPage = pageIndex;
+            const container = document.getElementById('container');
+            container.style.transform = `translateX(-${pageIndex * 100}vw)`;
+        }
+
+        // Swipe detection variables
+        let startX = 0;
+        let endX = 0;
+
+        // Add touch event listeners for swipe
+        document.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            endX = e.changedTouches[0].clientX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeThreshold = 50; // Minimum distance for swipe
+            const diffX = startX - endX;
+
+            if (Math.abs(diffX) > swipeThreshold) {
+                if (diffX > 0 && currentPage < totalPages - 1) {
+                    // Swipe left: next page
+                    slideTo(currentPage + 1);
+                } else if (diffX < 0 && currentPage > 0) {
+                    // Swipe right: previous page
+                    slideTo(currentPage - 1);
+                }
+            }
+        }
+
+        // Fireworks animation for Home page
+        function createFirework() {
+            const fireworks = document.getElementById('fireworks');
+            const firework = document.createElement('div');
+            firework.className = 'firework';
+            firework.style.left = Math.random() * 100 + '%';
+            firework.style.top = Math.random() * 100 + '%';
+            fireworks.appendChild(firework);
+            setTimeout(() => fireworks.removeChild(firework), 2000);
+        }
+        setInterval(createFirework, 500);
+
+        // Wishes functionality with rocket animation
+        let wishes = [];
+        function addWish() {
+            const input = document.getElementById('wish-input');
+            if (input.value.trim()) {
+                wishes.push(input.value);
+                input.value = '';
+                updateWishes();
+                
+                // Trigger rocket animation
+                const rocket = document.createElement('div');
+                rocket.className = 'rocket';
+                rocket.innerText = '🚀';
+                rocket.style.left = '50%';
+                rocket.style.top = '70%';
+                document.body.appendChild(rocket);
+                setTimeout(() => document.body.removeChild(rocket), 2000);
+            }
+        }
+        function updateWishes() {
+            const list = document.getElementById('wishes-list');
+            list.innerHTML = wishes.map(wish => `<p>${wish}</p>`).join('');
+        }
+
+        // Countdown to 2026 New Year
+        function updateCountdown() {
+            const now = new Date();
+            const nextYear = new Date(2026, 0, 1); // January 1, 2026
+            const diff = nextYear - now;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            document.getElementById('countdown').innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // Update welcome text with 2026
+        document.getElementById('welcome-text').innerText = `Welcome to 2026. May your year be filled with joy and success.`;
+    </script>
+</body>
+</html>
